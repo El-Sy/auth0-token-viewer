@@ -6,10 +6,14 @@ export default {
   setup() {
     const { loginWithRedirect, getAccessTokenSilently, isAuthenticated, user, logout } = useAuth0()
     const token = ref<string | null>(null)
+    const loading = ref<boolean>(false)
 
     onBeforeMount(async () => {
-      token.value = await getAccessTokenSilently()
-      console.log(token.value)
+      if (isAuthenticated) {
+        loading.value = true
+        token.value = await getAccessTokenSilently()
+        loading.value = false
+      }
     })
 
     return {
@@ -24,7 +28,8 @@ export default {
         logout({
           openUrl: false
         })
-      }
+      },
+      loading
     }
   }
 }
@@ -33,18 +38,17 @@ export default {
 <template>
   <main>
     <button v-if="!isAuthenticated" @click="login">Log in</button>
-    <div v-if="user" >
+    <div v-if="user">
       <label><b>User</b></label>
-      <pre
-      style="text-wrap: wrap;"
-      >{{ user }}</pre>
+      <pre style="text-wrap: wrap">{{ user }}</pre>
     </div>
     <br />
-    <div v-if="token" >
+    <div v-if="token">
       <label><b>JWT Token</b></label>
       <textarea style="width: 100%" rows="15" v-model="token" readonly />
     </div>
+    <div v-if="loading">...loading</div>
     <br />
-    <button v-if="isAuthenticated" @click="logout()">Logout</button>
+    <button v-if="isAuthenticated" @click="logout">Logout</button>
   </main>
 </template>
